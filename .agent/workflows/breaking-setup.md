@@ -47,6 +47,39 @@ Please confirm:
 
 ---
 
+### Step 1b: Create Report Directory
+
+**Generate directory name** in format: `YYYY-MM-DD-{package}-{version}`
+
+Example: `2026-01-16-ctbase-0.17.0`
+
+**Confirm with user**:
+
+```
+I will create a report directory:
+reports-breaking/2026-01-16-ctbase-0.17.0/
+
+All files for this migration will be stored there.
+Proceed? (yes/no)
+```
+
+**Create directory**:
+
+```bash
+// turbo
+mkdir -p reports-breaking/2026-01-16-ctbase-0.17.0
+```
+
+**Store directory path** for use in subsequent steps:
+
+```
+REPORT_DIR="reports-breaking/2026-01-16-ctbase-0.17.0"
+```
+
+**Note**: All subsequent file paths in this workflow will use `${REPORT_DIR}/` as the base path.
+
+---
+
 ### Step 2: Branch/Issue/PR Setup
 
 #### If NOT created:
@@ -92,36 +125,55 @@ Ask user for:
 
 Use validated strategy: `Pkg.dependencies()` API
 
-**Create temporary environment and extract graph**:
+**Extract graph using working script**:
 
 ```bash
 // turbo
-mkdir -p /tmp/ct-graph-$$
-cd /tmp/ct-graph-$$
+# Use the validated extract-graph.jl script
+cd /path/to/dev-workflows/experiments/dependency-graph
+julia --project=@. extract-graph.jl
+```
 
-julia --project=. -e '
-using Pkg, Dates
+**Alternative: Inline extraction** (if script not available):
 
-println("Installing OptimalControl to get dependency graph...")
-Pkg.add("OptimalControl")
+```bash
+// turbo
+julia --project=@. -e '
+using Pkg
 
-println("\nExtracting dependency graph...")
+println("Extracting dependency graph...\n")
+
+# Get all dependencies
 deps = Pkg.dependencies()
+
+# Filter CT packages and OptimalControl
 ct_pkgs = filter(p -> startswith(p.second.name, "CT") || 
                       p.second.name == "OptimalControl", deps)
 
-println("\n=== Dependency Graph ===\n")
-for (uuid, pkg) in sort(collect(ct_pkgs), by=p->p.second.name)
-    println("$(pkg.second.name) v$(pkg.second.version)")
-    if !isnothing(pkg.second.dependencies)
-        for (dep_name, dep_uuid) in pkg.second.dependencies
+# Build graph
+graph = Dict()
+for (uuid, pkg) in ct_pkgs
+    pkg_deps = []
+    if !isnothing(pkg.dependencies)
+        for (dep_name, dep_uuid) in pkg.dependencies
             if haskey(deps, dep_uuid) && 
                (startswith(deps[dep_uuid].name, "CT") || 
                 deps[dep_uuid].name == "OptimalControl")
-                println("  → $(deps[dep_uuid].name) v$(deps[dep_uuid].version)")
+                push!(pkg_deps, (deps[dep_uuid].name, deps[dep_uuid].version))
             end
         end
     end
+    graph[pkg.name] = (pkg.version, pkg_deps)
+end
+
+# Print full graph
+println("=== Dependency Graph ===\n")
+for (pkg_name, (version, pkg_deps)) in sort(collect(graph))
+    println("$pkg_name v$version")
+    for (dep_name, dep_version) in pkg_deps
+        println("  → $dep_name v$dep_version")
+    end
+    println()
 end
 '
 ```
@@ -235,9 +287,9 @@ Is this classification correct? (yes/no)
 
 ### Step 6: Generate Setup Report
 
-**Filename**: `reports-breaking/{package}-{version}-{date}-setup.md`
+**Filename**: `${REPORT_DIR}/setup.md`
 
-Example: `reports-breaking/ctbase-0.17.0-2026-01-16-setup.md`
+Example: `reports-breaking/2026-01-16-ctbase-0.17.0/setup.md`
 
 **Content**:
 ```markdown
@@ -250,6 +302,7 @@ Example: `reports-breaking/ctbase-0.17.0-2026-01-16-setup.md`
 **Branch**: breaking/ctbase-0.17
 **Issue**: #123
 **PR**: #124
+**Report Directory**: reports-breaking/2026-01-16-ctbase-0.17.0
 
 ## Dependency Graph
 
@@ -280,39 +333,56 @@ Example: `reports-breaking/ctbase-0.17.0-2026-01-16-setup.md`
 
 ## Next Steps
 
-Ready for action plan generation. Run `/breaking-action-plan` with this report.
+Ready for action plan generation. Run `/breaking-action-plan` with this report directory.
 ```
 
 ---
 
-### Step 7: Archive Report
+### Step 7: Archive Report and Prepare PR Comment
 
-1. **Save report** to `reports-breaking/` directory
+1. **Report already saved** in `${REPORT_DIR}/setup.md` (from Step 6)
 
-```bash
-// turbo
-mkdir -p reports-breaking
-# Save report content to file
-```
+2. **Create PR comment file** for user to copy-paste:
 
-2. **Post PR comment summary**:
+Create file `${REPORT_DIR}/PR-comment.md` with summary:
 
 ```markdown
 ## 🔧 Breaking Change Setup Complete
 
-Setup report generated: `reports-breaking/ctbase-0.17.0-2026-01-16-setup.md`
+Setup report directory: `reports-breaking/{date}-{package}-{version}/`
 
 **Summary**:
-- **Breaking packages**: CTModels, CTDirect
-- **Compatible packages**: CTFlows, CTParser, OptimalControl
+- **Breaking packages**: [list packages that need adaptation]
+- **Compatible packages**: [list packages that can widen compat]
 
-**Next step**: Run `/breaking-action-plan` to generate migration plan.
+**Next step**: Run `/breaking-action-plan reports-breaking/{date}-{package}-{version}` to generate migration plan.
+
+---
+
+*Setup completed on {date}*
 ```
 
-Use `gh` CLI to post comment:
-```bash
-gh pr comment {pr_number} --body "[comment text]"
+1. **Create additional guide files** in `${REPORT_DIR}/`:
+
+   - `README.md` - Overview of the report directory
+   - `GUIDE.md` - Next steps guide (optional)
+
+2. **Inform user**:
+
 ```
+✅ Setup complete! All files saved in: reports-breaking/{date}-{package}-{version}/
+
+Files created:
+- setup.md - Main setup report
+- PR-comment.md - Comment for PR #{pr_number}
+
+To post the comment on the PR:
+1. Open reports-breaking/{date}-{package}-{version}/PR-comment.md
+2. Copy the entire content
+3. Paste it as a comment on PR #{pr_number}
+```
+
+**Note**: All files for this migration are now organized in a single directory for easy tracking.
 
 ---
 
@@ -320,23 +390,31 @@ gh pr comment {pr_number} --body "[comment text]"
 
 **Ask user**: "Setup complete. Generate action plan now?" (yes/no)
 
-**If yes**: Automatically invoke `/breaking-action-plan` with report path:
+**If yes**: Automatically invoke `/breaking-action-plan` with report directory:
 ```
-/breaking-action-plan reports-breaking/ctbase-0.17.0-2026-01-16-setup.md
+/breaking-action-plan reports-breaking/2026-01-16-ctbase-0.17.0
 ```
 
 **If no**: 
 ```
 Setup complete! You can generate the action plan later by running:
-/breaking-action-plan reports-breaking/ctbase-0.17.0-2026-01-16-setup.md
+/breaking-action-plan reports-breaking/2026-01-16-ctbase-0.17.0
 ```
 
 ---
 
 ## Output Files
 
-- `reports-breaking/{package}-{version}-{date}-setup.md` - Detailed setup report
-- PR comment - Summary with link to report
+All files are organized in: `reports-breaking/{date}-{package}-{version}/`
+
+Example: `reports-breaking/2026-01-16-ctbase-0.17.0/`
+
+**Files created**:
+
+- `setup.md` - Detailed setup report
+- `PR-comment.md` - PR comment for user to copy-paste
+- `README.md` - Overview of the report directory (optional)
+- `GUIDE.md` - Next steps guide (optional)
 
 ---
 
