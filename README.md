@@ -53,6 +53,19 @@ Step-by-step tutorials demonstrating breaking change workflows:
 | [CTModels Breaking Change](case-study-ctmodels-breaking.md) | CTModels | Medium | Mid-layer package update affecting multiple dependents (CTDirect, CTParser) |
 | [CTBase Cascading Change](case-study-ctbase-cascading.md) | CTBase | Complex | Foundation package update with full cascade through CTModels → CTDirect |
 
+### Automated Workflows
+
+Agent-assisted workflows for managing breaking changes:
+
+| Workflow | Command | Purpose |
+|----------|---------|------|
+| [Breaking Setup](.agent/workflows/breaking-setup.md) | `/breaking-setup` | Initial setup and information gathering |
+| [Action Plan](.agent/workflows/breaking-action-plan.md) | `/breaking-action-plan` | Generate phase-by-phase migration plan |
+
+**Methodology**: [Breaking Change Rules](breaking-change-rules.md) — Fundamental invariants for migration plans
+
+**Reports**: Setup reports and action plans saved in [`reports-breaking/`](reports-breaking/)
+
 ## Integration Testing
 
 Verify that changes in base packages don't break dependent packages using the [breakage.yml](https://github.com/control-toolbox/CTActions/blob/main/.github/workflows/breakage.yml) GitHub Actions workflow.
