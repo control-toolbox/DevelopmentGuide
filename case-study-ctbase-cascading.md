@@ -379,6 +379,56 @@ CTParser:       0.7.2
 
 ---
 
+## CI Breakage Testing
+
+The [breakage.yml](https://github.com/control-toolbox/CTActions/blob/main/.github/workflows/breakage.yml) action tests dependent packages with your dev version.
+
+### Phase 2: CTBase 0.17.0-beta.1 on dev branch
+
+```text
+Breakage on CTModels:
+  CTModels 0.6.9: CTBase ∈ {0.16}  ← Not widened!
+  Dev CTBase: 0.17.0-beta.1
+  → Intersection: ∅
+  → Breakage FAILS (expected - CTModels needs adaptation)
+
+Breakage on CTFlows:
+  CTFlows 0.8.10: CTBase ∈ {0.16, 0.17.0-}  ← Widened
+  Dev CTBase: 0.17.0-beta.1
+  → Resolution path: CTBase 0.17.0-beta.1 ✅
+  → Tests confirm CTFlows works with new CTBase
+```
+
+### Phase 3: CTModels 0.7.0-beta.1 on dev branch
+
+```text
+Breakage on CTDirect:
+  CTDirect 0.17.5: CTModels ∈ {0.6}  ← Not widened for CTModels!
+  Dev CTModels: 0.7.0-beta.1
+  → Intersection: ∅
+  → Breakage FAILS (expected - CTDirect needs adaptation)
+
+Breakage on CTFlows:
+  CTFlows 0.8.10: CTModels ∈ {0.6, 0.7.0-}  ← Widened
+  Dev CTModels: 0.7.0-beta.1 (requires CTBase 0.17.0-)
+  → Resolution path: CTModels 0.7.0-beta.1 + CTBase 0.17.0-beta.1 ✅
+```
+
+### Phase 4: CTDirect 0.18.0-beta.1 on dev branch
+
+```text
+Breakage on OptimalControl:
+  OptimalControl 1.1.7: CTDirect ∈ {0.17, 0.18.0-}
+  Dev CTDirect: 0.18.0-beta.1 (requires CTModels 0.7.0-, CTBase 0.17.0-)
+  → Resolution path: CTDirect 0.18.0-beta.1 + CTModels 0.7.0-beta.1 + CTBase 0.17.0-beta.1 ✅
+  → Full cascade tested!
+```
+
+> [!TIP]
+> Breakage failures cascade: Phase 2 fails on CTModels, Phase 3 fails on CTDirect. This is expected! It identifies which packages need adaptation at each level.
+
+---
+
 ## Checklist
 
 - [ ] Identify cascade: which packages break which others?
@@ -387,3 +437,4 @@ CTParser:       0.7.2
 - [ ] (Optional) Release OptimalControl beta for full stack testing
 - [ ] Release stables bottom-up: CTBase → CTModels → CTDirect
 - [ ] Update top package compat (OptimalControl)
+- [ ] **Verify breakage action at each level: expected failures cascade through breaking packages**

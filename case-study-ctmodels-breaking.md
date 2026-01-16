@@ -327,6 +327,41 @@ CTParser:       0.8.0
 
 ---
 
+## CI Breakage Testing
+
+The [breakage.yml](https://github.com/control-toolbox/CTActions/blob/main/.github/workflows/breakage.yml) action tests dependent packages with your dev version.
+
+### Phase 2: CTModels 0.7.0-beta.1 on dev branch
+
+```text
+Breakage on CTDirect:
+  CTDirect 0.17.4: CTModels ∈ {0.6}  ← Not widened!
+  Dev CTModels: 0.7.0-beta.1
+  → Intersection: ∅  ← Empty!
+  → Breakage FAILS (expected - CTDirect needs adaptation)
+
+Breakage on CTFlows:
+  CTFlows 0.8.10: CTModels ∈ {0.6, 0.7.0-}  ← Widened
+  Dev CTModels: 0.7.0-beta.1
+  → Resolution path: CTModels 0.7.0-beta.1 ✅
+  → Tests confirm CTFlows works with new CTModels
+```
+
+### Phase 3: CTDirect 0.18.0-beta.1 on dev branch
+
+```text
+Breakage on OptimalControl:
+  OptimalControl 1.1.7: CTDirect ∈ {0.17, 0.18.0-}, CTModels ∈ {0.6, 0.7.0-}
+  Dev CTDirect: 0.18.0-beta.1 (requires CTModels 0.7.0-)
+  → Resolution path: CTDirect 0.18.0-beta.1 + CTModels 0.7.0-beta.1 ✅
+  → Tests confirm OptimalControl works with new stack
+```
+
+> [!TIP]
+> Breakage failures during Phase 2 are **expected** for packages that need adaptation (CTDirect, CTParser). The widening in Phase 1 ensures packages that work with both versions (CTFlows) pass breakage tests.
+
+---
+
 ## Checklist
 
 - [ ] Identify which packages break (need adaptation) vs. which work with both
@@ -336,3 +371,4 @@ CTParser:       0.8.0
 - [ ] Release base package stable FIRST (CTModels)
 - [ ] Release adapted packages stable AFTER (CTDirect, CTParser)
 - [ ] Update top package compat (OptimalControl)
+- [ ] **Verify breakage action: expected failures for breaking packages, passes for widened packages**
