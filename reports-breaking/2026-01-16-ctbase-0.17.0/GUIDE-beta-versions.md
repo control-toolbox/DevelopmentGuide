@@ -47,19 +47,44 @@ julia --project=. -e 'using Pkg; Pkg.instantiate(); using CTModels'
 julia --project=. -e 'using Pkg; Pkg.status()'
 ```
 
-### Étape 4 : Commit et tag
+### Étape 4 : Register in ct-registry and tag
+
+**Register in local registry**:
+
+```julia
+# In Julia REPL
+using LocalRegistry
+using CTModels
+register(CTModels, 
+         registry = "ct-registry",
+         repo = "git@github.com:control-toolbox/CTModels.jl.git")
+```
+
+**Note**:
+
+- This is the **first time** CTModels is registered in ct-registry (it's normally in General registry)
+- We must specify both `registry` and `repo` for first-time registration in a new registry
+- For subsequent beta versions in ct-registry, only `registry = "ct-registry"` would be needed
+
+**Create and push tag**:
 
 ```bash
 git add Project.toml
 git commit -m "chore: add CTBase v0.17 compat (beta version)"
 
-# Créer le tag beta
+# Create the beta tag
 git tag v0.6.10-beta
 
-# Pousser la branche et le tag
+# Push branch and tag
 git push origin beta/ctbase-0.17-compat
 git push origin v0.6.10-beta
 ```
+
+**Why ct-registry?**
+
+- ✅ Faster (no General registry delays)
+- ✅ Beta versions stay isolated
+- ✅ Easier to test and iterate
 
 ---
 
@@ -102,19 +127,44 @@ julia --project=. -e 'using Pkg; Pkg.instantiate(); using CTParser'
 julia --project=. -e 'using Pkg; Pkg.status()'
 ```
 
-### Étape 4 : Commit et tag
+### Étape 4 : Register in ct-registry and tag
+
+**Register in local registry**:
+
+```julia
+# In Julia REPL
+using LocalRegistry
+using CTParser
+register(CTParser, 
+         registry = "ct-registry",
+         repo = "git@github.com:control-toolbox/CTParser.jl.git")
+```
+
+**Note**:
+
+- This is the **first time** CTParser is registered in ct-registry (it's normally in General registry)
+- We must specify both `registry` and `repo` for first-time registration in a new registry
+- For subsequent beta versions in ct-registry, only `registry = "ct-registry"` would be needed
+
+**Create and push tag**:
 
 ```bash
 git add Project.toml
 git commit -m "chore: add CTBase v0.17 compat (beta version)"
 
-# Créer le tag beta
+# Create the beta tag
 git tag v0.7.3-beta
 
-# Pousser la branche et le tag
+# Push branch and tag
 git push origin beta/ctbase-0.17-compat
 git push origin v0.7.3-beta
 ```
+
+**Why ct-registry?**
+
+- ✅ Faster (no General registry delays)
+- ✅ Beta versions stay isolated
+- ✅ Easier to test and iterate
 
 ---
 
@@ -184,10 +234,11 @@ Une fois les versions beta créées et testées :
 
 ## ⚠️ Notes Importantes
 
-- Les versions beta sont **temporaires** et ne seront pas enregistrées dans le registre Julia
+- Les versions beta sont enregistrées dans **ct-registry** (registre local), pas dans le registre Julia général
 - Elles servent uniquement à tester la migration CTBase indépendamment
 - Une fois la migration CTBase validée, on passera aux vraies versions CTModels v0.7.0 et CTParser v0.8.0
-- Les versions beta peuvent être utilisées avec `Pkg.add(name="CTModels", version="0.6.10-beta")`
+- Les versions beta peuvent être utilisées avec `Pkg.add(name="CTModels", version="0.6.10-beta")` (après avoir ajouté ct-registry)
+- Pour ajouter ct-registry : `pkg> registry add git@github.com:control-toolbox/ct-registry.git`
 
 ---
 

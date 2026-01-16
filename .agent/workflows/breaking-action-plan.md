@@ -24,18 +24,34 @@ This workflow generates a detailed, phase-by-phase migration plan based on the s
 
 ### Step 1: Read Setup Report
 
-**Input**: Path to setup report (e.g., `reports-breaking/ctbase-0.17.0-2026-01-16-setup.md`)
+**Input**: Path to setup report **directory** (e.g., `reports-breaking/2026-01-16-ctbase-0.17.0`)
+
+**Note**: The workflow now accepts a directory path instead of a file path. This allows all migration files to be organized together.
+
+**Read setup report**:
+
+- File: `{report_dir}/setup.md`
+- Example: `reports-breaking/2026-01-16-ctbase-0.17.0/setup.md`
 
 **Parse and extract**:
+
 - Package name and versions
 - Dependency graph
 - Breakage test results
 - Package classification (breaking vs compatible)
 - Branch/issue/PR information
+- Report directory path
+
+**Store for later use**:
+
+```
+REPORT_DIR="{report_dir}"  # e.g., "reports-breaking/2026-01-16-ctbase-0.17.0"
+```
 
 **Validate completeness**:
 ```
-Setup report loaded:
+Setup report loaded from: {REPORT_DIR}/setup.md
+
 - Package: CTBase 0.16.4 → 0.17.0
 - Breaking packages: CTModels, CTDirect
 - Compatible packages: CTFlows, CTParser, OptimalControl
@@ -203,32 +219,100 @@ Plan is valid ✅
 
 ### Step 6: Generate Action Plan File
 
-**Filename**: `reports-breaking/{package}-{version}-{date}-plan.md`
+**Filename**: `${REPORT_DIR}/action-plan.md`
 
-Reuses base name from setup report, adds `-plan` suffix.
+Example: `reports-breaking/2026-01-16-ctbase-0.17.0/action-plan.md`
 
-Example: `reports-breaking/ctbase-0.17.0-2026-01-16-plan.md`
+**Note**: The plan is saved in the same directory as the setup report for easy organization.
+
+**For beta-based migrations**, include local registry instructions at the beginning of the plan:
 
 **Content structure**:
 ```markdown
 # Breaking Change Action Plan
 
 **Generated**: 2026-01-16 19:45:00
-**Based on**: reports-breaking/ctbase-0.17.0-2026-01-16-setup.md
+**Based on**: {REPORT_DIR}/setup.md
 **Package**: CTBase 0.16.4 → 0.17.0
 **Complexity**: Complex (Foundation package with cascade)
+
+---
+
+## 📦 Local Registry Setup (Required for Beta Releases)
+
+All beta versions in this migration will be registered in **ct-registry** (local registry) instead of the General registry.
+
+### Why Use Local Registry for Betas?
+
+- ✅ **Faster**: No waiting for General registry processing (~10-30 min delay)
+- ✅ **Isolated**: Beta versions don't pollute the General registry
+- ✅ **Flexible**: Easy to update/remove beta versions if needed
+
+### One-Time Setup
+
+Add ct-registry to your Julia environment (only needed once):
+
+**SSH** (recommended):
+```julia
+pkg> registry add git@github.com:control-toolbox/ct-registry.git
+```
+
+**HTTPS**:
+
+```julia
+pkg> registry add https://github.com/control-toolbox/ct-registry.git
+```
+
+Install LocalRegistry.jl:
+
+```julia
+pkg> add LocalRegistry
+```
+
+### How to Register a Beta Version
+
+When a phase instructs you to register a beta version:
+
+1. **Update `Project.toml`** with the beta version number
+2. **Commit and push** to GitHub
+3. **Register in ct-registry**:
+
+```julia
+using LocalRegistry
+using YourPackage  # e.g., using CTModels
+register(YourPackage, 
+         registry = "ct-registry",
+         repo = "git@github.com:org/YourPackage.jl.git")
+```
+
+**Note**:
+
+- If the package is **already in ct-registry**, you can omit the `repo` parameter
+- If it's the **first time** registering in ct-registry (even if it exists in General registry), you must specify `repo`
+- Example: `repo = "git@github.com:control-toolbox/CTModels.jl.git"`
+
+1. **Create GitHub tag** manually:
+
+```bash
+git tag v0.6.10-beta
+git push origin v0.6.10-beta
+```
+
+**Note**: For stable (non-beta) releases, use `@JuliaRegistrator register()` as usual.
 
 ---
 
 ## Summary
 
 **Migration overview**:
+
 - Breaking package: CTBase (foundation)
 - Cascade: CTBase → CTModels → CTDirect
 - Total phases: 8
 - Estimated duration: 2-3 weeks
 
 **Affected packages**:
+
 - Breaking: CTModels, CTDirect
 - Compatible: CTFlows, CTParser, OptimalControl
 
@@ -265,10 +349,11 @@ Example: `reports-breaking/ctbase-0.17.0-2026-01-16-plan.md`
 
 ## References
 
-- Setup report: [reports-breaking/ctbase-0.17.0-2026-01-16-setup.md](reports-breaking/ctbase-0.17.0-2026-01-16-setup.md)
-- Methodology: [breaking-change-rules.md](../breaking-change-rules.md)
-- Invariants: [invariants-analysis.md](../experiments/dependency-graph/invariants-analysis.md)
-- Case study: [case-study-ctbase-cascading.md](../case-study-ctbase-cascading.md)
+- Setup report: [{REPORT_DIR}/setup.md]({REPORT_DIR}/setup.md)
+- Methodology: [breaking-change-rules.md](../../breaking-change-rules.md)
+- Invariants: [invariants-analysis.md](../../experiments/dependency-graph/invariants-analysis.md)
+- Case study: [case-study-ctbase-cascading.md](../../case-study-ctbase-cascading.md)
+
 ```
 
 ---
@@ -285,7 +370,7 @@ Summary:
 - Cascade: CTBase → CTModels → CTDirect
 - All invariants validated ✅
 
-Plan saved to: reports-breaking/ctbase-0.17.0-2026-01-16-plan.md
+Plan saved to: {REPORT_DIR}/action-plan.md
 
 Would you like me to show you the plan? (yes/no)
 ```
@@ -295,7 +380,9 @@ Would you like me to show you the plan? (yes/no)
 **If no**: 
 ```
 Plan ready! You can review it at:
-reports-breaking/ctbase-0.17.0-2026-01-16-plan.md
+{REPORT_DIR}/action-plan.md
+
+All migration files are in: {REPORT_DIR}/
 ```
 
 ---
@@ -396,14 +483,14 @@ During plan generation:
 ## Example Complete Flow
 
 ```
-User: /breaking-action-plan reports-breaking/ctbase-0.17.0-2026-01-16-setup.md
+User: /breaking-action-plan reports-breaking/2026-01-16-ctbase-0.17.0
 
-Agent: [Step 1] Reads and validates setup report
+Agent: [Step 1] Reads setup report from reports-breaking/2026-01-16-ctbase-0.17.0/setup.md
 Agent: [Step 2] Loads methodology + invariants
 Agent: [Step 3] Determines complexity: Complex
 Agent: [Step 4] Generates 8 phases with details
 Agent: [Step 5] Validates all invariants
-Agent: [Step 6] Saves plan to reports-breaking/
+Agent: [Step 6] Saves plan to reports-breaking/2026-01-16-ctbase-0.17.0/action-plan.md
 Agent: [Step 7] Presents summary to user
 
 Result: Complete action plan ready for execution

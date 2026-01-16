@@ -80,6 +80,35 @@ REPORT_DIR="reports-breaking/2026-01-16-ctbase-0.17.0"
 
 ---
 
+### Step 1c: Setup Local Registry (for Beta Releases)
+
+**Important**: Beta versions will be registered in the **local registry** (ct-registry), not the General registry.
+
+**Inform user**:
+
+```
+⚠️ Beta Release Strategy
+
+For this migration, beta versions will be registered in ct-registry:
+- Faster: No waiting for General registry processing (~10-30 min)
+- Isolated: Beta versions don't pollute General registry
+- Testing: Breakage tests automatically use ct-registry
+
+You need to add ct-registry to your Julia environment:
+
+pkg> registry add git@github.com:control-toolbox/ct-registry.git
+
+Or via HTTPS:
+pkg> registry add https://github.com/control-toolbox/ct-registry.git
+
+You also need LocalRegistry.jl to register packages:
+pkg> add LocalRegistry
+```
+
+**Note**: This step is only needed for migrations using beta versions (Option B strategy).
+
+---
+
 ### Step 2: Branch/Issue/PR Setup
 
 #### If NOT created:
@@ -354,6 +383,8 @@ Setup report directory: `reports-breaking/{date}-{package}-{version}/`
 **Summary**:
 - **Breaking packages**: [list packages that need adaptation]
 - **Compatible packages**: [list packages that can widen compat]
+
+**Beta Strategy**: Beta versions will be registered in ct-registry (local registry) for faster testing.
 
 **Next step**: Run `/breaking-action-plan reports-breaking/{date}-{package}-{version}` to generate migration plan.
 
