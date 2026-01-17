@@ -47,6 +47,23 @@ julia --project=. -e 'using Pkg; Pkg.instantiate(); using CTModels'
 julia --project=. -e 'using Pkg; Pkg.status()'
 ```
 
+### Étape 3b : Ajouter ct-registry (première fois uniquement)
+
+**Important** : Si c'est la première fois que vous utilisez ct-registry sur cette machine :
+
+```julia
+# Dans le REPL Julia
+pkg> registry add git@github.com:control-toolbox/ct-registry.git
+```
+
+Vérifier que le registre est bien ajouté :
+
+```julia
+pkg> registry status
+```
+
+**Note** : Cette étape n'est nécessaire qu'une seule fois par machine.
+
 ### Étape 4 : Register in ct-registry and tag
 
 **Register in local registry**:
@@ -125,6 +142,15 @@ julia --project=. -e 'using Pkg; Pkg.instantiate(); using CTParser'
 
 # Vérifier la compatibilité
 julia --project=. -e 'using Pkg; Pkg.status()'
+```
+
+### Étape 3b : Ajouter ct-registry (si pas déjà fait)
+
+**Si vous n'avez pas encore ajouté ct-registry** (voir étape 3b de CTModels) :
+
+```julia
+# Dans le REPL Julia
+pkg> registry add git@github.com:control-toolbox/ct-registry.git
 ```
 
 ### Étape 4 : Register in ct-registry and tag

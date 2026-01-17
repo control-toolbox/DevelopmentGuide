@@ -94,12 +94,15 @@ For this migration, beta versions will be registered in ct-registry:
 - Isolated: Beta versions don't pollute General registry
 - Testing: Breakage tests automatically use ct-registry
 
-You need to add ct-registry to your Julia environment:
+You need to add ct-registry to your Julia environment (one-time setup):
 
 pkg> registry add git@github.com:control-toolbox/ct-registry.git
 
 Or via HTTPS:
 pkg> registry add https://github.com/control-toolbox/ct-registry.git
+
+Verify it's added:
+pkg> registry status
 
 You also need LocalRegistry.jl to register packages:
 pkg> add LocalRegistry
