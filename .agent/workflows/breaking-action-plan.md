@@ -238,6 +238,67 @@ Example: `reports-breaking/2026-01-16-ctbase-0.17.0/action-plan.md`
 
 ---
 
+## Compat Strategy Guidance
+
+When widening compat bounds for foundation packages, choose the appropriate strategy:
+
+### Progressive Widening (Recommended for Foundation Packages)
+
+Use `DependencyName = "old, new"` (e.g., `CTBase = "0.16, 0.17"`) when:
+
+✅ **Use when**:
+- Package is a foundation package (many dependents)
+- Tests confirm compatibility with both versions
+- Releasing a patch version (respecting SemVer)
+- Want to provide smooth transition period
+
+✅ **Advantages**:
+- Backward compatibility maintained
+- Users can migrate at their own pace
+- Safety net if new version has issues
+- Respects SemVer (patch = no breaking)
+
+❌ **Trade-offs**:
+- Longer maintenance period
+- Must test with both versions
+
+### Direct Migration
+
+Use `DependencyName = "new"` (e.g., `CTBase = "0.17"`) when:
+
+⚠️ **Use when**:
+- Releasing a major/minor version (breaking change)
+- Old version has critical bugs/security issues
+- New version has essential features
+- After a transition period (e.g., 6 months)
+
+✅ **Advantages**:
+- Forces adoption of new version
+- Simpler maintenance (one version)
+- Clear migration path
+
+❌ **Trade-offs**:
+- Breaks backward compatibility
+- Forces immediate migration
+- No fallback if issues arise
+
+### Recommendation for This Migration
+
+For foundation packages like CTBase:
+1. **Initial release** (patch): Use progressive widening `"0.16, 0.17"`
+2. **After transition** (6+ months, major): Use direct migration `"0.17"`
+
+**Example**:
+```toml
+# CTDirect v0.17.5 (now - patch release)
+CTBase = "0.16, 0.17"  # Progressive widening
+
+# CTDirect v0.18.0 (later - major release)
+CTBase = "0.17"  # Direct migration
+```
+
+---
+
 ## 📦 Local Registry Setup (Required for Beta Releases)
 
 All beta versions in this migration will be registered in **ct-registry** (local registry) instead of the General registry.
