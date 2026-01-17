@@ -73,26 +73,76 @@ After a transition period (e.g., 6 months), we can release major versions that d
 
 ---
 
-## Phase 1: Compat Widening
+## Migration Strategy: Two-Phase Approach
 
-**Objective**: Widen compat bounds to accept CTBase v0.17.0
+This migration uses a **two-phase beta-to-stable strategy** to ensure thorough testing before public release.
 
-**Duration**: 1-2 days
+### Why Two Phases?
 
-**Packages to update**:
+Since CTModels v0.6.10-beta and CTParser v0.7.3-beta are already in ct-registry for testing, we'll complete the beta ecosystem before releasing stable versions.
 
-1. CTDirect v0.17.4 → v0.17.5 (patch)
-2. CTFlows v0.8.9 → v0.8.10 (patch)
-3. OptimalControl v1.1.6 → v1.1.7 (patch)
+**Benefits**:
+
+- ✅ Complete beta ecosystem for internal testing
+- ✅ Time to validate all interactions
+- ✅ Coordinated stable release when ready
+- ✅ No premature releases in General registry
+
+### Phase 1: Beta Ecosystem (Internal Testing)
+
+**Goal**: Create beta versions in ct-registry for comprehensive testing
+
+**Duration**: 1-2 weeks (testing period)
+
+**Packages**:
+
+1. CTDirect v0.17.5-beta (ct-registry)
+2. CTFlows v0.8.10-beta (ct-registry)
+3. OptimalControl v1.1.7-beta (ct-registry)
+
+**Who can use**: Internal developers with ct-registry configured
+
+**Purpose**: Validate entire ecosystem with CTBase v0.17.0
+
+### Phase 2: Stable Release (Public Availability)
+
+**Goal**: Release stable versions in General registry
+
+**Duration**: 1 day (after Phase 1 validation)
+
+**Packages**:
+
+1. CTDirect v0.17.5 (General registry)
+2. CTFlows v0.8.10 (General registry)
+3. OptimalControl v1.1.7 (General registry)
+
+**Who can use**: All users (public)
+
+**Trigger**: After successful beta testing and validation
 
 ---
 
-### Step 1.1: CTDirect v0.17.4 → v0.17.5
+## Phase 1: Beta Ecosystem (ct-registry)
 
-**Type**: Patch release (compat widening only)
+**Objective**: Create and test beta versions in ct-registry
+
+**Duration**: 1-2 weeks
+
+**Packages to create**:
+
+1. CTDirect v0.17.4 → v0.17.5-beta (ct-registry)
+2. CTFlows v0.8.9 → v0.8.10-beta (ct-registry)
+3. OptimalControl v1.1.6 → v1.1.7-beta (ct-registry)
+
+---
+
+### Step 1.1: CTDirect v0.17.4 → v0.17.5-beta
+
+**Type**: Beta release (ct-registry)
 
 **Changes needed**:
 
+- Update `Project.toml` version: `0.17.5-beta`
 - Update `Project.toml` compat: `CTBase = "0.16, 0.17"`
 
 **Steps**:
@@ -103,13 +153,13 @@ After a transition period (e.g., 6 months), we can release major versions that d
    cd CTDirect.jl
    git checkout main
    git pull
-   git checkout -b compat/ctbase-0.17
+   git checkout -b beta/ctbase-0.17-compat
    ```
 
 2. **Update Project.toml**:
 
    ```toml
-   version = "0.17.5"
+   version = "0.17.5-beta"
    
    [compat]
    CTBase = "0.16, 0.17"  # Progressive widening - supports both versions
@@ -132,35 +182,45 @@ After a transition period (e.g., 6 months), we can release major versions that d
 
    ```bash
    git add Project.toml
-   git commit -m "chore: add CTBase v0.17 compat"
-   git push origin compat/ctbase-0.17
+   git commit -m "chore: add CTBase v0.17 compat (beta)"
+   git push origin beta/ctbase-0.17-compat
    ```
 
-5. **Create PR on GitHub**:
-   - Title: "Add CTBase v0.17 compat"
-   - Description: "Widen compat to accept CTBase v0.17.0 (no code changes needed)"
-
-6. **After PR merge, register**:
+5. **Create tag**:
 
    ```bash
-   # Comment on the merge commit or main branch
-   @JuliaRegistrator register()
+   git tag v0.17.5-beta
+   git push origin v0.17.5-beta
    ```
+
+6. **Register in ct-registry**:
+
+   ```julia
+   using LocalRegistry
+   using CTDirect
+   register(CTDirect, 
+            registry = "ct-registry",
+            repo = "git@github.com:control-toolbox/CTDirect.jl.git")
+   ```
+
+   **Note**: First-time registration in ct-registry requires the `repo` parameter.
 
 **Verification**:
 
 - ✅ Tests pass with CTBase v0.16.x
 - ✅ Tests pass with CTBase v0.17.0
+- ✅ Registered in ct-registry
 - ✅ No code changes needed
 
 ---
 
-### Step 1.2: CTFlows v0.8.9 → v0.8.10
+### Step 1.2: CTFlows v0.8.9 → v0.8.10-beta
 
-**Type**: Patch release (compat widening only)
+**Type**: Beta release (ct-registry)
 
 **Changes needed**:
 
+- Update `Project.toml` version: `0.8.10-beta`
 - Update `Project.toml` compat: `CTBase = "0.16, 0.17"`
 
 **Steps**:
@@ -171,13 +231,13 @@ After a transition period (e.g., 6 months), we can release major versions that d
    cd CTFlows.jl
    git checkout main
    git pull
-   git checkout -b compat/ctbase-0.17
+   git checkout -b beta/ctbase-0.17-compat
    ```
 
 2. **Update Project.toml**:
 
    ```toml
-   version = "0.8.10"
+   version = "0.8.10-beta"
    
    [compat]
    CTBase = "0.16, 0.17"  # Progressive widening - supports both versions
@@ -200,31 +260,41 @@ After a transition period (e.g., 6 months), we can release major versions that d
 
    ```bash
    git add Project.toml
-   git commit -m "chore: add CTBase v0.17 compat"
-   git push origin compat/ctbase-0.17
+   git commit -m "chore: add CTBase v0.17 compat (beta)"
+   git push origin beta/ctbase-0.17-compat
    ```
 
-5. **Create PR on GitHub**:
-   - Title: "Add CTBase v0.17 compat"
-   - Description: "Widen compat to accept CTBase v0.17.0 (no code changes needed)"
-
-6. **After PR merge, register**:
+5. **Create tag**:
 
    ```bash
-   @JuliaRegistrator register()
+   git tag v0.8.10-beta
+   git push origin v0.8.10-beta
    ```
+
+6. **Register in ct-registry**:
+
+   ```julia
+   using LocalRegistry
+   using CTFlows
+   register(CTFlows, 
+            registry = "ct-registry",
+            repo = "git@github.com:control-toolbox/CTFlows.jl.git")
+   ```
+
+   **Note**: First-time registration in ct-registry requires the `repo` parameter.
 
 **Verification**:
 
 - ✅ Tests pass with CTBase v0.16.x
 - ✅ Tests pass with CTBase v0.17.0
+- ✅ Registered in ct-registry
 - ✅ No code changes needed
 
 ---
 
-### Step 1.3: OptimalControl v1.1.6 → v1.1.7
+### Step 1.3: OptimalControl v1.1.6 → v1.1.7-beta
 
-**Type**: Patch release (compat widening only)
+**Type**: Beta release (ct-registry)
 
 **Changes needed**:
 
@@ -238,13 +308,13 @@ After a transition period (e.g., 6 months), we can release major versions that d
    cd OptimalControl.jl
    git checkout main
    git pull
-   git checkout -b compat/ctbase-0.17
+   git checkout -b beta/ctbase-0.17-compat
    ```
 
 2. **Update Project.toml**:
 
    ```toml
-   version = "1.1.7"
+   version = "1.1.7-beta"
    
    [compat]
    CTBase = "0.16, 0.17"  # Progressive widening - supports both versions
@@ -267,45 +337,121 @@ After a transition period (e.g., 6 months), we can release major versions that d
 
    ```bash
    git add Project.toml
-   git commit -m "chore: add CTBase v0.17 compat"
-   git push origin compat/ctbase-0.17
+   git commit -m "chore: add CTBase v0.17 compat (beta)"
+   git push origin beta/ctbase-0.17-compat
    ```
 
-5. **Create PR on GitHub**:
-   - Title: "Add CTBase v0.17 compat"
-   - Description: "Widen compat to accept CTBase v0.17.0 (no code changes needed)"
-
-6. **After PR merge, register**:
+5. **Create tag**:
 
    ```bash
-   @JuliaRegistrator register()
+   git tag v1.1.7-beta
+   git push origin v1.1.7-beta
    ```
+
+6. **Register in ct-registry**:
+
+   ```julia
+   using LocalRegistry
+   using OptimalControl
+   register(OptimalControl, 
+            registry = "ct-registry",
+            repo = "git@github.com:control-toolbox/OptimalControl.jl.git")
+   ```
+
+   **Note**: First-time registration in ct-registry requires the `repo` parameter.
 
 **Verification**:
 
 - ✅ Tests pass with CTBase v0.16.x
 - ✅ Tests pass with CTBase v0.17.0
+- ✅ Registered in ct-registry
 - ✅ No code changes needed
 
 ---
 
 ## Phase 1 Completion Checklist
 
-- [ ] CTDirect v0.17.5 PR created
-- [ ] CTDirect v0.17.5 PR merged
-- [ ] CTDirect v0.17.5 registered
-- [ ] CTFlows v0.8.10 PR created
-- [ ] CTFlows v0.8.10 PR merged
-- [ ] CTFlows v0.8.10 registered
-- [ ] OptimalControl v1.1.7 PR created
-- [ ] OptimalControl v1.1.7 PR merged
-- [ ] OptimalControl v1.1.7 registered
+- [ ] CTDirect v0.17.5-beta created and tagged
+- [ ] CTDirect v0.17.5-beta registered in ct-registry
+- [ ] CTFlows v0.8.10-beta created and tagged
+- [ ] CTFlows v0.8.10-beta registered in ct-registry
+- [ ] OptimalControl v1.1.7-beta created and tagged
+- [ ] OptimalControl v1.1.7-beta registered in ct-registry
+- [ ] Beta ecosystem tested successfully
 
 ---
 
-## Final Verification
+## Phase 2: Stable Release (General Registry)
 
-After all packages are registered, verify the complete ecosystem:
+**Objective**: Release stable versions in General registry for public availability
+
+**Duration**: 1 day
+
+**Trigger**: After Phase 1 beta testing is complete and validated
+
+**Packages to release**:
+
+1. CTDirect v0.17.5 (General registry)
+2. CTFlows v0.8.10 (General registry)
+3. OptimalControl v1.1.7 (General registry)
+
+### Process for Each Package
+
+For each package (CTDirect, CTFlows, OptimalControl):
+
+1. **Verify beta testing complete**
+   - All tests passing with beta versions
+   - No issues reported
+   - Ecosystem validated
+
+2. **Create stable release branch**:
+
+   ```bash
+   cd PackageName.jl
+   git checkout main
+   git pull
+   git checkout -b release/ctbase-0.17-compat
+   ```
+
+3. **Update Project.toml** (remove `-beta`):
+
+   ```toml
+   version = "X.Y.Z"  # Remove -beta suffix
+   
+   [compat]
+   CTBase = "0.16, 0.17"  # Keep progressive widening
+   ```
+
+4. **Test**:
+
+   ```bash
+   julia --project=. -e 'using Pkg; Pkg.test()'
+   ```
+
+5. **Create PR and merge**:
+   - Title: "Release vX.Y.Z: Add CTBase v0.17 compat"
+   - Description: "Stable release after beta testing. Widens compat to support CTBase v0.17.0"
+
+6. **Register in General registry**:
+
+   ```bash
+   # Comment on merge commit
+   @JuliaRegistrator register()
+   ```
+
+### Phase 2 Completion Checklist
+
+- [ ] CTDirect v0.17.5 released in General registry
+- [ ] CTFlows v0.8.10 released in General registry
+- [ ] OptimalControl v1.1.7 released in General registry
+- [ ] Public announcement made
+- [ ] Documentation updated
+
+---
+
+## Beta Ecosystem Verification (Phase 1)
+
+During Phase 1, verify the complete beta ecosystem:
 
 ```bash
 mkdir -p /tmp/ctbase-migration-test
@@ -346,20 +492,28 @@ Pkg.status()
 
 ### Summary
 
-**Total duration**: 1-2 days (much faster than initially expected!)
+**Total duration**:
 
-**Packages updated**:
+- Phase 1 (Beta): 1-2 weeks (testing)
+- Phase 2 (Stable): 1 day (release)
 
-- CTDirect: v0.17.4 → v0.17.5 (compat widening)
-- CTFlows: v0.8.9 → v0.8.10 (compat widening)
-- OptimalControl: v1.1.6 → v1.1.7 (compat widening)
+**Two-phase strategy**:
 
-**Beta versions** (for testing):
+**Phase 1 - Beta Ecosystem** (ct-registry):
 
-- CTModels v0.6.10-beta (in ct-registry)
-- CTParser v0.7.3-beta (in ct-registry)
+- CTDirect v0.17.5-beta
+- CTFlows v0.8.10-beta
+- CTOptimalControl v1.1.7-beta
+- CTModels v0.6.10-beta (already created)
+- CTParser v0.7.3-beta (already created)
 
-**Key insight**: Beta versions allowed us to test CTBase v0.17.0 independently and discover that no packages were actually broken, avoiding a complex multi-phase migration.
+**Phase 2 - Stable Release** (General registry):
+
+- CTDirect v0.17.5
+- CTFlows v0.8.10
+- OptimalControl v1.1.7
+
+**Key insight**: Two-phase beta-to-stable strategy allows thorough internal testing before public release, avoiding premature releases and providing flexibility to iterate if needed.
 
 ---
 
