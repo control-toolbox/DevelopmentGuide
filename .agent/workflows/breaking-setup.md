@@ -108,6 +108,15 @@ You also need LocalRegistry.jl to register packages:
 pkg> add LocalRegistry
 ```
 
+**Automatic verification** (agent can run this):
+
+```bash
+// turbo
+julia -e 'using Pkg; println("=== Installed Registries ==="); for reg in Pkg.Registry.reachable_registries(); println("- $(reg.name)"); end'
+```
+
+**Check for ct-registry**: The output should include `ct-registry`. If not, inform the user to add it.
+
 **Note**: This step is only needed for migrations using beta versions (Option B strategy).
 
 ---

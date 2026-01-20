@@ -4,15 +4,81 @@
 Dependency Graph Extractor for control-toolbox ecosystem
 
 This script extracts the dependency graph with versions for CT* packages.
-It can use different strategies.
+It automatically checks and installs ct-registry if needed.
+
+Usage:
+    julia extract-graph.jl                    # Extract graph with current environment
+    julia extract-graph.jl v1.1.7-beta        # Extract graph with OptimalControl@v1.1.7-beta
+    julia extract-graph.jl 1.1.7-beta         # Also works without 'v' prefix
 """
+
 
 using Pkg
 using Dates
 
-function extract_graph_from_pkg()
+function is_registry_installed(registry_name::String)
+    """Check if a registry is installed"""
+    registries = Pkg.Registry.reachable_registries()
+    return any(r -> r.name == registry_name, registries)
+end
+
+function install_ct_registry()
+    """Install ct-registry if not already installed"""
+    registry_name = "ct-registry"
+    registry_url = "https://github.com/control-toolbox/ct-registry.git"
+
+    if is_registry_installed(registry_name)
+        println("✓ $registry_name is already installed")
+        return true
+    end
+
+    println("⚠ $registry_name not found. Installing...")
+    try
+        Pkg.Registry.add(Pkg.RegistrySpec(url=registry_url))
+        println("✓ $registry_name successfully installed")
+        return true
+    catch e
+        println("✗ Failed to install $registry_name: $e")
+        return false
+    end
+end
+
+function setup_local_environment()
+    """Setup a local environment in the script directory"""
+    script_dir = @__DIR__
+
+    # Activate local environment
+    println("Setting up local environment in $script_dir...")
+    Pkg.activate(script_dir)
+
+    # Instantiate if needed (install dependencies from Project.toml if it exists)
+    if isfile(joinpath(script_dir, "Project.toml"))
+        Pkg.instantiate()
+    end
+
+    println("✓ Local environment activated\n")
+end
+
+function extract_graph_from_pkg(; oc_version::Union{Nothing,String}=nothing)
     """Strategy 1: Use Pkg.dependencies() API"""
     println("=== Strategy 1: Pkg.dependencies() ===\n")
+
+    # If a specific version is requested, add it first
+    if !isnothing(oc_version)
+        println("Installing OptimalControl@$oc_version in local environment...")
+        try
+            # Normalize version string (ensure it starts with 'v')
+            version_str = startswith(oc_version, "v") ? oc_version : "v" * oc_version
+
+            # For beta/alpha versions, use 'rev' parameter to specify the exact tag
+            # This works better than 'version' which expects standard semver
+            Pkg.add(Pkg.PackageSpec(name="OptimalControl", rev=version_str))
+            println("✓ OptimalControl@$version_str installed successfully\n")
+        catch e
+            println("✗ Failed to install OptimalControl@$oc_version: $e")
+            println("Continuing with current environment...\n")
+        end
+    end
 
     deps = Pkg.dependencies()
     ct_pkgs = filter(p -> startswith(p.second.name, "CT") || p.second.name == "OptimalControl", deps)
@@ -116,7 +182,22 @@ end
 # Main execution
 if abspath(PROGRAM_FILE) == @__FILE__
     println("Extracting dependency graph...\n")
-    graph = extract_graph_from_pkg()
+
+    # Setup local environment in script directory
+    setup_local_environment()
+
+    # Check and install ct-registry if needed
+    install_ct_registry()
+    println()
+
+    # Parse command-line arguments for version
+    oc_version = nothing
+    if length(ARGS) > 0
+        oc_version = ARGS[1]
+        println("Requested OptimalControl version: $oc_version\n")
+    end
+
+    graph = extract_graph_from_pkg(oc_version=oc_version)
     print_graph(graph)
     export_to_markdown(graph)
 end
