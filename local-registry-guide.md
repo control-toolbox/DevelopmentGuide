@@ -156,8 +156,11 @@ register(MyPackage,
 
 3. **Register**:
    ```julia
-   using LocalRegistry
-   register()
+      using LocalRegistry
+      using MyPackage
+      register(MyPackage, 
+         registry = "ct-registry",
+         repo = "git@github.com:control-toolbox/MyPackage.jl.git")
    ```
 
 4. **Create GitHub release** with tag `v1.2.0`
