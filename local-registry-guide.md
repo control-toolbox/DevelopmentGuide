@@ -191,7 +191,10 @@ Then register normally:
 
 ```julia
 using LocalRegistry
-register()
+using MyPackage
+register(MyPackage, 
+   registry = "ct-registry",
+   repo = "git@github.com:control-toolbox/MyPackage.jl.git")
 ```
 
 **Beta naming conventions**:
