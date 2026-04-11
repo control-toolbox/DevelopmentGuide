@@ -145,13 +145,13 @@ register(MyPackage,
 
 1. **Update version** in `Project.toml`:
    ```toml
-   version = "1.2.0"
+   version = "1.2.0-beta"
    ```
 
 2. **Commit changes**:
    ```bash
    git add Project.toml
-   git commit -m "Bump version to 1.2.0"
+   git commit -m "Bump version to 1.2.0-beta"
    ```
 
 3. **Register**:
@@ -169,13 +169,13 @@ register(MyPackage,
     git checkout my-branch
 
     # Create a lightweight tag
-    git tag v1.2.0
+    git tag v1.2.0-beta
 
     # Or create an annotated tag (preferred for releases)
-    git tag -a v1.2.0 -m "Release version 1.2.0"
+    git tag -a v1.2.0-beta -m "Release version 1.2.0"
 
     # Push the tag to remote
-    git push origin v1.2.0
+    git push origin v1.2.0-beta
     ```
 
 ### Register a Beta Version
@@ -184,7 +184,7 @@ For breaking changes, use pre-release versions:
 
 ```toml
 # Project.toml
-version = "2.0.0-beta.1"
+version = "2.0.0-beta"
 ```
 
 Then register normally:
@@ -198,8 +198,8 @@ register(MyPackage,
 ```
 
 **Beta naming conventions**:
-- `2.0.0-beta.1`, `2.0.0-beta.2`, ... for beta releases
-- `2.0.0-rc.1`, `2.0.0-rc.2`, ... for release candidates
+- `2.0.0-beta`, `2.0.1-beta`, ... for beta releases
+- `2.0.0-rc`, `2.0.0-rc`, ... for release candidates
 - `2.0.0` for final stable release
 
 ## Beta Strategy for Breaking Changes
@@ -235,7 +235,7 @@ CTBase = "1, 2.0.0-"  # Accept v1 AND v2 pre-releases
 ```bash
 cd CTBase
 # Make breaking changes
-# Update version to 2.0.0-beta.1 in Project.toml
+# Update version to 2.0.0-beta in Project.toml
 ```
 
 ```julia
@@ -264,7 +264,7 @@ Register the updated package:
 
 ```julia
 using LocalRegistry
-register()  # Creates CTDirect v2.0.0-beta.1
+register()  # Creates CTDirect v2.0.0-beta
 ```
 
 #### Phase 4: Test Integration
@@ -277,8 +277,8 @@ Pkg.develop(path="path/to/OptimalControl")
 Pkg.test("OptimalControl")
 
 # Resolver will choose:
-# - CTBase v2-beta.1 (only option satisfying all constraints)
-# - CTDirect v2-beta.1 (requires CTBase v2)
+# - CTBase v2-beta (only option satisfying all constraints)
+# - CTDirect v2-beta (requires CTBase v2)
 # - OptimalControl v1 (accepts CTBase v1 or v2)
 ```
 
